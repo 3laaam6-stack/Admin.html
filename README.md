@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>إدارة صفوف - دراسات اجتماعية</title>
   <meta name="theme-color" content="#8b5cf6">
-  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItij2K3Yp9ixINmF2LHZhdmK2KkgLSDYp9mE2LnYq9mK2KfYqNin2Kkg2KfZhNi52YrZhNmK2KkiLAogICJzaG9ydF9uYW1lIjogItij2K3Yp9ixINmF2LHZhdmK2KkiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2YxZjVmOSIsCiAgInRoZW1lX2NvbG9yIjogIiM4YjVjZjYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48dGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJz7wn5OWPC90ZXh0Pjwvc3ZnPiIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICBdCn0=">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
       --bg: #f5f3ff; --card: #ffffff; --text: #1e293b; --text-light: #64748b;
@@ -28,13 +28,13 @@
     @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
     @keyframes bounceIn { 0%{opacity:0;transform:scale(0.3);} 50%{opacity:1;transform:scale(1.05);} 70%{transform:scale(0.9);} 100%{transform:scale(1);} }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     .animate-fadeInUp { animation: fadeInUp 0.5s ease-out; }
     .animate-scaleIn { animation: scaleIn 0.4s ease-out; }
     .animate-bounceIn { animation: bounceIn 0.6s ease-out; }
     .stagger-1 { animation-delay: 0.05s; } .stagger-2 { animation-delay: 0.1s; } .stagger-3 { animation-delay: 0.15s; }
     .stagger-4 { animation-delay: 0.2s; } .stagger-5 { animation-delay: 0.25s; } .stagger-6 { animation-delay: 0.3s; }
-    .stagger-7 { animation-delay: 0.35s; } .stagger-8 { animation-delay: 0.4s; }
 
     .app-container { display: flex; min-height: 100vh; }
 
@@ -83,7 +83,7 @@
 
     .page { background: var(--card); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); flex: 1; }
     .page h2 { margin-bottom: 16px; font-size: 22px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .page-actions { display: flex; gap: 5px; margin-right: auto; }
+    .page-actions { display: flex; gap: 5px; margin-right: auto; flex-wrap: wrap; }
     form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; background: var(--bg); padding: 12px; border-radius: 10px; align-items: flex-end; }
     form input, form select { padding: 11px 13px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; color: var(--text); }
     form button { padding: 11px 16px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 14px; }
@@ -97,8 +97,8 @@
     .btn-edit { background: #f59e0b; } .btn-del { background: #ef4444; } .btn-view { background: #3b82f6; }
     .btn-wa { background: #25D366; } .btn-save { background: #10b981; } .btn-back { background: #64748b; }
     .btn-share { background: #3b82f6; } .btn-excel { background: #059669; } .btn-pdf { background: #dc2626; }
-    .btn-img { background: #f59e0b; } .btn-ai { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .btn-print { background: #f59e0b; }
+    .btn-img { background: #f59e0b; } .btn-ai { background: #8b5cf6; } .btn-print { background: #f59e0b; }
+    .btn-ocr { background: #f97316; } .btn-word { background: #0ea5e9; } .btn-bulk { background: #059669; }
 
     .score-input { width: 55px; padding: 6px; border: 2px solid var(--border); border-radius: 6px; text-align: center; font-size: 14px; font-weight: 700; }
     .score-input:focus { border-color: var(--primary); outline: none; }
@@ -109,12 +109,10 @@
     .notification { background: #fee2e2; padding: 8px 10px; border-radius: 8px; margin: 4px 0; color: #991b1b; display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
     .points { display: inline-block; background: #ede9fe; color: #5b21b6; padding: 3px 8px; border-radius: 15px; font-weight: 700; font-size: 11px; }
     .toast { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; font-weight: 700; z-index: 9999; animation: slideDown 0.3s; }
-    .qr-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-    .qr-modal-content { background: #fff; padding: 20px; border-radius: 14px; text-align: center; animation: bounceIn 0.4s; }
+    .spinner { border: 4px solid #ddd6fe; border-top: 4px solid #8b5cf6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
 
     .ai-card { background: linear-gradient(135deg, #ede9fe, #ddd6fe); border-radius: 14px; padding: 16px; margin: 10px 0; border: 2px solid #8b5cf6; }
-    .ai-card h3 { color: #5b21b6; margin-bottom: 8px; font-size: 16px; }
-    .ai-suggestion { background: #fff; padding: 10px; border-radius: 8px; margin: 4px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .ai-suggestion { background: #fff; padding: 10px; border-radius: 8px; margin: 4px 0; font-size: 13px; }
 
     @media (max-width: 1200px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 800px) { :root { --sidebar-w: 280px; } }
@@ -143,7 +141,7 @@
 
 <script>
 // ==================== DATA LAYER ====================
-const PF = 'social_studies_';
+const PF = 'social_studies_v2_';
 function gid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 function get(k) { return JSON.parse(localStorage.getItem(PF + k) || '[]'); }
 function set(k, v) { localStorage.setItem(PF + k, JSON.stringify(v)); }
@@ -181,7 +179,7 @@ function shareText(text) { if (navigator.share) navigator.share({ title: 'إدا
 async function exportAllData() {
   const d = { classes: classes() };
   const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'social_studies_backup.json'; a.click();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'social_studies_v2_backup.json'; a.click();
   showToast('✅ تم التصدير');
 }
 async function importAllData(e) {
@@ -205,19 +203,22 @@ function loadDashboard() {
   const m = document.getElementById('main-content');
   const cls = classes();
   const totalStudents = cls.reduce((sum, c) => sum + (c.students ? c.students.length : 0), 0);
-  const avgScore = totalStudents > 0 ? Math.round(cls.reduce((sum, c) => sum + (c.students ? c.students.reduce((s, st) => s + (st.workScore || 70) + (st.month1Score || 0) + (st.month2Score || 0), 0) : 0), 0) / totalStudents) : 0;
+  const allScores = [];
+  cls.forEach(c => (c.students || []).forEach(s => allScores.push((s.workScore || 70) + (s.month1Score || 0) + (s.month2Score || 0))));
+  const avgScore = allScores.length ? Math.round(allScores.reduce((a,b) => a + b, 0) / allScores.length) : 0;
+  const excellent = allScores.filter(s => s >= 85).length;
 
   let h = `<div class="dash-header"><h1>🌍 أهلاً بك أستاذ محمد علام</h1><p>إدارة صفوف مادة الدراسات الاجتماعية</p></div>
   <div class="stats-row">
     <div class="stat-card animate-fadeInUp"><div class="sicon" style="background:#ede9fe;">🏫</div><div><div class="sval">${cls.length}</div><div class="slbl">فصل</div></div></div>
     <div class="stat-card animate-fadeInUp"><div class="sicon" style="background:#dbeafe;">👨‍🎓</div><div><div class="sval">${totalStudents}</div><div class="slbl">طالب</div></div></div>
     <div class="stat-card animate-fadeInUp"><div class="sicon" style="background:#d1fae5;">📊</div><div><div class="sval">${avgScore}%</div><div class="slbl">متوسط عام</div></div></div>
-    <div class="stat-card animate-fadeInUp"><div class="sicon" style="background:#fef3c7;">⭐</div><div><div class="sval">${cls.filter(c => c.students && c.students.some(s => (s.workScore || 70) + (s.month1Score || 0) + (s.month2Score || 0) >= 85)).length}</div><div class="slbl">فصول ممتازة</div></div></div>
+    <div class="stat-card animate-fadeInUp"><div class="sicon" style="background:#fef3c7;">⭐</div><div><div class="sval">${excellent}</div><div class="slbl">ممتازين</div></div></div>
   </div>
   <div class="grid">
     <div class="dash-card stagger-1" onclick="navigateTo('classes')"><span class="ico">🏫</span><div class="ttl">الفصول</div><div class="sub">${cls.length} فصل</div></div>
     <div class="dash-card stagger-2" onclick="navigateTo('aireport')"><span class="ico">🤖</span><div class="ttl">تحليل AI</div><div class="sub">توقعات واقتراحات</div></div>
-    <div class="dash-card stagger-3" onclick="navigateTo('reports')"><span class="ico">📊</span><div class="ttl">التقارير</div><div class="sub">Excel / PDF</div></div>
+    <div class="dash-card stagger-3" onclick="navigateTo('reports')"><span class="ico">📊</span><div class="ttl">التقارير</div><div class="sub">Excel / PDF / Word</div></div>
   </div>`;
   m.innerHTML = h;
 }
@@ -241,7 +242,7 @@ function loadClasses() {
     <div class="grid">`;
   cls.forEach(c => {
     const studentCount = c.students ? c.students.length : 0;
-    h += `<div class="dash-card" style="cursor:pointer;" onclick="openClass('${c.id}')">
+    h += `<div class="dash-card" onclick="openClass('${c.id}')">
       <span class="ico">🏫</span>
       <div class="ttl">${c.name}</div>
       <div class="sub">${studentCount} طالب</div>
@@ -251,7 +252,7 @@ function loadClasses() {
       </div>
     </div>`;
   });
-  if (!cls.length) h += '<p style="text-align:center;padding:30px;">لا توجد فصول بعد - أضف أول فصل</p>';
+  if (!cls.length) h += '<p style="text-align:center;padding:30px;">لا توجد فصول - أضف أول فصل</p>';
   h += `</div></div></div>`;
   m.innerHTML = h;
   document.getElementById('cf').onsubmit = function(e) {
@@ -291,6 +292,8 @@ function openClass(id) {
       <button class="btn btn-img" onclick="shareAsImage('class-content', '${c.name}')">📸</button>
       <button class="btn btn-pdf" onclick="shareAsPDF('class-content', '${c.name}')">📄</button>
       <button class="btn btn-excel" onclick="exportClassExcel('${c.id}')">📥 Excel</button>
+      <button class="btn btn-ocr" onclick="scanPaper('${c.id}')">📷 سكان</button>
+      <button class="btn btn-bulk" onclick="bulkAdd('${c.id}')">📝 إضافة جماعي</button>
     </div>
   </h2>
   <div id="class-content">
@@ -299,7 +302,7 @@ function openClass(id) {
       <button type="submit">➕ إضافة طالب</button>
     </form>
     <table>
-      <thead><tr><th>#</th><th>الطالب</th><th>أعمال سنة (70)</th><th>شهر 1 (15)</th><th>شهر 2 (15)</th><th>المجموع</th><th>النسبة</th><th>واتساب</th><th>حذف</th></tr></thead>
+      <thead><tr><th>#</th><th>الطالب</th><th>أعمال (70)</th><th>شهر1 (15)</th><th>شهر2 (15)</th><th>المجموع</th><th>النسبة</th><th>تقدير</th><th>تقرير</th><th>واتساب</th><th>حذف</th></tr></thead>
       <tbody>`;
   const students = c.students || [];
   students.forEach((s, i) => {
@@ -309,6 +312,7 @@ function openClass(id) {
     const total = workScore + month1 + month2;
     const pct = Math.round((total / 100) * 100);
     const scoreClass = pct >= 85 ? 'score-high' : pct >= 50 ? 'score-mid' : 'score-low';
+    const grade = pct >= 85 ? 'ممتاز' : pct >= 70 ? 'جيد جداً' : pct >= 50 ? 'جيد' : 'ضعيف';
     h += `<tr>
       <td>${i + 1}</td>
       <td><strong>${s.name}</strong></td>
@@ -317,11 +321,14 @@ function openClass(id) {
       <td><input type="number" class="score-input" value="${month2}" min="0" max="15" onchange="updateScore('${c.id}', '${s.id}', 'month2Score', this.value)"></td>
       <td class="total-score ${scoreClass}">${total}</td>
       <td class="${scoreClass}">${pct}%</td>
+      <td>${grade}</td>
+      <td><button class="btn btn-pdf" onclick="generateStudentReport('${c.id}', '${s.id}')">📄</button>
+          <button class="btn btn-word" onclick="generateStudentWord('${c.id}', '${s.id}')">📝</button></td>
       <td><button class="btn btn-wa" onclick="sendStudentResult('${c.id}', '${s.id}')">📱</button></td>
       <td><button class="btn btn-del" onclick="deleteStudent('${c.id}', '${s.id}')">🗑️</button></td>
     </tr>`;
   });
-  if (!students.length) h += '<tr><td colspan="9">لا يوجد طلاب - أضف أول طالب</td></tr>';
+  if (!students.length) h += '<tr><td colspan="11">لا يوجد طلاب</td></tr>';
   h += `</tbody></table></div></div>`;
   m.innerHTML = h;
   document.getElementById('sf').onsubmit = function(e) {
@@ -340,6 +347,43 @@ function openClass(id) {
   };
 }
 
+function bulkAdd(classId) {
+  const names = prompt('الصق أسماء الطلاب (كل اسم في سطر):');
+  if (!names) return;
+  const nameList = names.split('\n').map(n => n.trim()).filter(n => n);
+  if (!nameList.length) return alert('لا توجد أسماء');
+  const all = classes();
+  const idx = all.findIndex(c => c.id === classId);
+  if (idx > -1) {
+    if (!all[idx].students) all[idx].students = [];
+    nameList.forEach(name => {
+      all[idx].students.push({ id: gid(), name, workScore: 70, month1Score: 0, month2Score: 0 });
+    });
+    saveClasses(all);
+    showToast('✅ تمت إضافة ' + nameList.length + ' طلاب');
+    openClass(classId);
+  }
+}
+
+function scanPaper(classId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    if (!this.files[0]) return;
+    showToast('⏳ جاري قراءة الورق...');
+    try {
+      const result = await Tesseract.recognize(this.files[0], 'ara+eng');
+      const text = result.data.text;
+      alert('تم قراءة النص:\n\n' + text + '\n\nيمكنك استخدام النص يدوياً أو الاستمرار في التطوير');
+      showToast('✅ تم القراءة');
+    } catch(e) {
+      alert('❌ فشل القراءة');
+    }
+  };
+  input.click();
+}
+
 function updateScore(classId, studentId, field, value) {
   const all = classes();
   const cIdx = all.findIndex(c => c.id === classId);
@@ -348,7 +392,7 @@ function updateScore(classId, studentId, field, value) {
     if (sIdx > -1) {
       all[cIdx].students[sIdx][field] = parseInt(value) || 0;
       saveClasses(all);
-      showToast('✅ تم تحديث الدرجة');
+      showToast('✅ تم التحديث');
     }
   }
 }
@@ -370,7 +414,70 @@ function sendStudentResult(classId, studentId) {
   if (!s) return;
   const total = (s.workScore || 70) + (s.month1Score || 0) + (s.month2Score || 0);
   const pct = Math.round((total / 100) * 100);
-  shareText(`📋 نتيجة ${s.name}\n📚 أعمال سنة: ${s.workScore || 70}\n📝 شهر 1: ${s.month1Score || 0}\n📝 شهر 2: ${s.month2Score || 0}\n📊 المجموع: ${total}/100 (${pct}%)\n---\nأستاذ محمد علام`);
+  shareText(`📋 نتيجة ${s.name}\n📚 أعمال سنة: ${s.workScore || 70}/70\n📝 شهر 1: ${s.month1Score || 0}/15\n📝 شهر 2: ${s.month2Score || 0}/15\n📊 المجموع: ${total}/100 (${pct}%)\n---\nأستاذ محمد علام`);
+}
+
+// ==================== STUDENT REPORT (PDF/Word) ====================
+function generateStudentReport(classId, studentId) {
+  const c = classById(classId);
+  const s = c ? c.students.find(st => st.id === studentId) : null;
+  if (!s) return;
+  
+  const workScore = s.workScore || 70;
+  const month1 = s.month1Score || 0;
+  const month2 = s.month2Score || 0;
+  const total = workScore + month1 + month2;
+  const pct = Math.round((total / 100) * 100);
+  const grade = pct >= 85 ? 'ممتاز' : pct >= 70 ? 'جيد جداً' : pct >= 50 ? 'جيد' : 'ضعيف';
+  const support = pct < 50 ? 'يحتاج دعم إضافي ومتابعة خاصة' : pct >= 85 ? 'يستحق مكافأة على التفوق' : 'يحتاج متابعة منتظمة';
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  doc.setFont('helvetica', 'bold');
+  doc.text('تقرير أداء الطالب', 105, 15, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text(`الطالب: ${s.name}`, 20, 30, { align: 'right' });
+  doc.text(`الفصل: ${c.name}`, 20, 38, { align: 'right' });
+  doc.text(`أعمال السنة: ${workScore}/70`, 20, 46, { align: 'right' });
+  doc.text(`امتحان الشهر الأول: ${month1}/15`, 20, 54, { align: 'right' });
+  doc.text(`امتحان الشهر الثاني: ${month2}/15`, 20, 62, { align: 'right' });
+  doc.text(`المجموع: ${total}/100 (${pct}%)`, 20, 70, { align: 'right' });
+  doc.text(`التقدير: ${grade}`, 20, 78, { align: 'right' });
+  doc.text(`التوصية: ${support}`, 20, 86, { align: 'right' });
+  doc.text('---', 105, 95, { align: 'center' });
+  doc.text('أستاذ محمد علام - مادة الدراسات الاجتماعية', 105, 102, { align: 'center' });
+  doc.save(`${s.name}_report.pdf`);
+  showToast('✅ تم إنشاء التقرير PDF');
+}
+
+function generateStudentWord(classId, studentId) {
+  const c = classById(classId);
+  const s = c ? c.students.find(st => st.id === studentId) : null;
+  if (!s) return;
+  
+  const workScore = s.workScore || 70;
+  const month1 = s.month1Score || 0;
+  const month2 = s.month2Score || 0;
+  const total = workScore + month1 + month2;
+  const pct = Math.round((total / 100) * 100);
+  const grade = pct >= 85 ? 'ممتاز' : pct >= 70 ? 'جيد جداً' : pct >= 50 ? 'جيد' : 'ضعيف';
+  const support = pct < 50 ? 'يحتاج دعم إضافي' : pct >= 85 ? 'يستحق مكافأة' : 'يحتاج متابعة';
+
+  const html = `<h2>تقرير الطالب: ${s.name}</h2><table>
+    <tr><td>الفصل</td><td>${c.name}</td></tr>
+    <tr><td>أعمال السنة</td><td>${workScore}/70</td></tr>
+    <tr><td>شهر 1</td><td>${month1}/15</td></tr>
+    <tr><td>شهر 2</td><td>${month2}/15</td></tr>
+    <tr><td>المجموع</td><td>${total}/100 (${pct}%)</td></tr>
+    <tr><td>التقدير</td><td>${grade}</td></tr>
+    <tr><td>التوصية</td><td>${support}</td></tr>
+  </table>`;
+  const blob = new Blob([html], { type: 'application/msword' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${s.name}_report.doc`;
+  a.click();
+  showToast('✅ تم إنشاء التقرير Word');
 }
 
 function exportClassesExcel() {
@@ -391,10 +498,12 @@ function exportClassesExcel() {
 function exportClassExcel(classId) {
   const c = classById(classId);
   if (!c) return;
-  const data = [['#', 'الطالب', 'أعمال سنة (70)', 'شهر 1 (15)', 'شهر 2 (15)', 'المجموع', 'النسبة']];
+  const data = [['#', 'الطالب', 'أعمال (70)', 'شهر1 (15)', 'شهر2 (15)', 'المجموع', 'النسبة', 'التقدير']];
   (c.students || []).forEach((s, i) => {
     const total = (s.workScore || 70) + (s.month1Score || 0) + (s.month2Score || 0);
-    data.push([i + 1, s.name, s.workScore || 70, s.month1Score || 0, s.month2Score || 0, total, Math.round((total / 100) * 100) + '%']);
+    const pct = Math.round((total / 100) * 100);
+    const grade = pct >= 85 ? 'ممتاز' : pct >= 70 ? 'جيد جداً' : pct >= 50 ? 'جيد' : 'ضعيف';
+    data.push([i + 1, s.name, s.workScore || 70, s.month1Score || 0, s.month2Score || 0, total, pct + '%', grade]);
   });
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -503,8 +612,8 @@ function loadAireport() {
   // المتفوقون
   if (excellent.length > 0) {
     h += `<div class="ai-card animate-fadeInUp">
-      <h3>🌟 طلاب ممتازون</h3>`;
-    excellent.forEach(s => h += `<div class="ai-suggestion">👨‍🎓 ${s.name} (${s.className}) - ${s.pct}%</div>`);
+      <h3>🌟 طلاب ممتازون - يستحقون مكافأة</h3>`;
+    excellent.forEach(s => h += `<div class="ai-suggestion">👨‍🎓 ${s.name} (${s.className}) - ${s.pct}% 🏅</div>`);
     h += `</div>`;
   }
 
@@ -570,6 +679,7 @@ function loadReports() {
       <button class="btn btn-pdf" onclick="shareAsPDF('reports-content', 'التقرير_الشامل')">📄 PDF</button>
       <button class="btn btn-img" onclick="shareAsImage('reports-content', 'التقرير_الشامل')">📸 صورة</button>
       <button class="btn btn-print" onclick="printFullReport()">🖨️ طباعة</button>
+      <button class="btn btn-word" onclick="exportFullWord()">📝 Word</button>
     </div>
     <div id="reports-content">`;
 
@@ -626,7 +736,7 @@ function loadReports() {
   // ملخص الفصول
   h += `<h3 style="margin-top:18px;">🏫 ملخص الفصول</h3>
     <table>
-      <thead><tr><th>الفصل</th><th>الطلاب</th><th>المتوسط</th><th>أعلى درجة</th><th>أقل درجة</th><th>نسبة النجاح</th></tr></thead>
+      <thead><tr><th>الفصل</th><th>الطلاب</th><th>المتوسط</th><th>أعلى</th><th>أقل</th><th>نجاح%</th></tr></thead>
       <tbody>`;
   
   cls.forEach(c => {
@@ -644,7 +754,7 @@ function loadReports() {
 
 function exportFullExcel() {
   const cls = classes();
-  const data = [['#', 'الطالب', 'الفصل', 'أعمال سنة (70)', 'شهر 1 (15)', 'شهر 2 (15)', 'المجموع', 'النسبة', 'التقدير']];
+  const data = [['#', 'الطالب', 'الفصل', 'أعمال (70)', 'شهر1 (15)', 'شهر2 (15)', 'المجموع', 'النسبة', 'التقدير']];
   let i = 1;
   cls.forEach(c => {
     (c.students || []).forEach(s => {
@@ -659,6 +769,25 @@ function exportFullExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'الدرجات');
   XLSX.writeFile(wb, 'social_studies_grades.xlsx');
   showToast('✅ تم تصدير Excel');
+}
+
+function exportFullWord() {
+  const cls = classes();
+  let html = '<h2>كشف درجات الدراسات الاجتماعية</h2>';
+  cls.forEach(c => {
+    html += `<h3>${c.name}</h3><table><tr><th>#</th><th>الطالب</th><th>أعمال</th><th>شهر1</th><th>شهر2</th><th>المجموع</th><th>النسبة</th></tr>`;
+    (c.students || []).forEach((s, i) => {
+      const total = (s.workScore || 70) + (s.month1Score || 0) + (s.month2Score || 0);
+      html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.workScore || 70}</td><td>${s.month1Score || 0}</td><td>${s.month2Score || 0}</td><td>${total}</td><td>${Math.round((total / 100) * 100)}%</td></tr>`;
+    });
+    html += '</table><br>';
+  });
+  const blob = new Blob([html], { type: 'application/msword' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'social_studies_full_report.doc';
+  a.click();
+  showToast('✅ تم تصدير Word');
 }
 
 function printFullReport() {
